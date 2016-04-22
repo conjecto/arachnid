@@ -3,7 +3,7 @@
     "type": "library",
     "description": "A crawler to find all unique internal pages on a given website",
     "keywords": ["crawl","spider","search","scrape"],
-    "homepage": "http://github.com/codeguy/arachnid",
+    "homepage": "http://github.com/conjecto/arachnid",
     "license": "MIT",
     "authors": [
         {
