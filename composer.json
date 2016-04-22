@@ -5,6 +5,7 @@
     "keywords": ["crawl","spider","search","scrape"],
     "homepage": "http://github.com/conjecto/arachnid",
     "license": "MIT",
+    "version": "1.0.4",
     "authors": [
         {
             "name": "Josh Lockhart",
