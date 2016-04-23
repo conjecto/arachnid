@@ -1,6 +1,6 @@
 <?php
 
-namespace Arachnid;
+namespace Conjecto\Arachnid;
 
 use Goutte\Client;
 use Symfony\Component\DomCrawler\Crawler;
