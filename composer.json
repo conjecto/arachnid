@@ -21,6 +21,8 @@
         "fabpot/goutte": "^3.1"
     },
     "autoload": {
-        "psr-0": { "Arachnid": "src" }
+        "psr-4": {
+            "Conjecto\\Arachnid\\": "src/Arachnid"
+        }
     }
 }
