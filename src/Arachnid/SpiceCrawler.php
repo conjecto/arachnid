@@ -381,6 +381,7 @@ class SpiceCrawler
             '@^javascript\:.*$@i',
             '@^#.*@',
             '@iccal@i',
+            '@demarches-en-ligne@i',
             //   '@^.*\.pdf@i',
             '@^.*\.docx@i',
             '@^.*\.doc@i',
