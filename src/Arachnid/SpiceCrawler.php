@@ -421,9 +421,9 @@ class SpiceCrawler
         if (empty($uri) === true) {
             return false;
         }
-        $file_bl = $path . '/../../global_blacklist.txt';
+    /*    $file_bl = $path . '/../../global_blacklist.txt';
         $stop_links = Array();
-        if(!file_exists($file_bl)){
+        if(!file_exists($file_bl)){*/
             $stop_links = array(
                 '@^javascript\:.*$@i',
                 '@^#.*@',
@@ -443,7 +443,7 @@ class SpiceCrawler
                 '@^.*\.bmp@i',
                 '@^mailto\:.*@i'
             );
-            file_put_contents($file_bl,implode("\r\n",$stop_links));
+         /*   file_put_contents($file_bl,implode("\r\n",$stop_links));
         }
         else{
             $stop_links = file($file_bl);
@@ -453,7 +453,7 @@ class SpiceCrawler
                 }
             }
         }
-
+*/
         foreach($this->blacklist as $bl){
             $stop_links[]= trim($bl);
         }
