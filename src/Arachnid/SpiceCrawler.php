@@ -229,14 +229,14 @@ class SpiceCrawler
                 $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
             }
         } catch (GuzzleException $e) {
-            $h = fopen($path.'/../log.txt','a');
+            $h = fopen($path.'/../../log.txt','a');
             fwrite($h,$path." ".$e->getcode()." ". $e->getMessage()." "."\r\n");
             fclose($h);
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
             $this->links[$url]['error_message'] = $e->getMessage();
         } catch (\Exception $e) {
-            $h = fopen($path.'/../log.txt','a');
+            $h = fopen($path.'/../../log.txt','a');
             fwrite($h,$path." ".$e->getcode()." ". $e->getMessage()." ".$e->getFile()." - line ".$e->getLine()."\r\n");
             fclose($h);
             $this->links[$url]['status_code'] = '404';
@@ -453,22 +453,6 @@ class SpiceCrawler
                 }
             }
         }
-
-        $stop_links = array(
-            '@^javascript\:.*$@i',
-            '@^#.*@',
-            '@iccal@i',
-            '@demarches-en-ligne@i',
-            //   '@^.*\.pdf@i',
-            '@^.*\.docx@i',
-            '@^.*\.doc@i',
-            '@^.*\.jpg@i',
-            '@^.*\.gif@i',
-            '@^.*\.png@i',
-            '@^.*\.zip@i',
-            '@^.*\.bmp@i',
-            '@^mailto\:.*@i'
-        );
 
         foreach($this->blacklist as $bl){
             $stop_links[]= trim($bl);
