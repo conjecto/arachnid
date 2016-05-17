@@ -145,7 +145,7 @@ class SpiceCrawler
                 return;
             }
 
-            $url = $this->cleanUpURL($url);
+            $url = $this->cleanUpURL($url,$path);
             $client = new Client();
             $client->followRedirects();
 
