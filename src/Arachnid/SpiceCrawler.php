@@ -429,10 +429,10 @@ class SpiceCrawler
                 '@^#.*@',
                 '@iccal@i',
                 '@demarches-en-ligne@i',
-                'droits-demarches-particuliers@i',
+                '@droits-demarches-particuliers@i',
                 '@week.listevents@i',
                 '@month.calendar@i',
-                '@mailto:@i',
+                '@mailto\:@i',
                 //   '@^.*\.pdf@i',
                 '@^.*\.docx@i',
                 '@^.*\.doc@i',
@@ -440,8 +440,7 @@ class SpiceCrawler
                 '@^.*\.gif@i',
                 '@^.*\.png@i',
                 '@^.*\.zip@i',
-                '@^.*\.bmp@i',
-                '@^mailto\:.*@i'
+                '@^.*\.bmp@i'
             );
          /*   file_put_contents($file_bl,implode("\r\n",$stop_links));
         }
