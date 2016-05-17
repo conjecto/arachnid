@@ -429,9 +429,12 @@ class SpiceCrawler
                 '@^#.*@',
                 '@iccal@i',
                 '@demarches-en-ligne@i',
+                '@demarches_en_ligne@i',
                 '@droits-demarches-particuliers@i',
                 '@module\=Calendrier@i',
-                '@week.listevents@i',
+                '@module-Calendrier@i',
+                '@listevents@i',
+                '@icalrepeat@i',
                 '@month.calendar@i',
                 '@mailto\:@i',
                 //   '@^.*\.pdf@i',
@@ -480,7 +483,7 @@ class SpiceCrawler
         }
 
         $cleaning_links = array(
-            '@PHPSESSID=[a-f0-9]+@i' => 'PHPSESSID=el4ukv0kqbvoirg7nkp4dncpk3',
+            '@PHPSESSID=[a-z0-9]+@i' => 'PHPSESSID=el4ukv0kqbvoirg7nkp4dncpk3',
             '@_tsel=[0-9]+@i' => '_tsel=1400000000'
         );
 
