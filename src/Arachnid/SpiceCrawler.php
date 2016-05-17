@@ -494,24 +494,11 @@ class SpiceCrawler
         if (empty($uri) === true) {
             return '';
         }
-        $file_cl = $path . '/../../global_cleanup_url.txt';
-        $cleaning_links = Array();
-        if(!file_exists($file_cl)){
-            $cleaning_links = array(
-                '@PHPSESSID=[a-f0-9]+@i' => 'PHPSESSID=el4ukv0kqbvoirg7nkp4dncpk3',
-                '@_tsel=[0-9]+@i' => '_tsel=1400000000'
 
-            );
-            file_put_contents($file_cl,implode("\r\n",$cleaning_links));
-        }
-        else{
-            $cleaning_links = file($file_cl);
-            foreach($cleaning_links as $k => $data){
-                if (empty($data) === true) {
-                    unset($cleaning_links[$k]);
-                }
-            }
-        }
+        $cleaning_links = array(
+            '@PHPSESSID=[a-f0-9]+@i' => 'PHPSESSID=el4ukv0kqbvoirg7nkp4dncpk3',
+            '@_tsel=[0-9]+@i' => '_tsel=1400000000'
+        );
 
         foreach ($cleaning_links as $pattern => $replace) {
             $uri = preg_replace($pattern, $replace, $uri);
