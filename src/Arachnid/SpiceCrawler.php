@@ -430,6 +430,7 @@ class SpiceCrawler
                 '@iccal@i',
                 '@demarches-en-ligne@i',
                 '@droits-demarches-particuliers@i',
+                '@module\=Calendrier@i',
                 '@week.listevents@i',
                 '@month.calendar@i',
                 '@mailto\:@i',
