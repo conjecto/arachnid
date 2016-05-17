@@ -1,6 +1,6 @@
 <?php
 
-namespace Arachnid;
+namespace Conjecto\Arachnid;
 
 use Goutte\Client;
 use Symfony\Component\DomCrawler\Crawler;
@@ -59,6 +59,18 @@ class SpiceCrawler
     protected $blacklist;
 
     /**
+     * The start time of the thread
+     * @var int
+     */
+    protected $startTime;
+
+    /**
+     * thread is finish
+     * @var bool
+     */
+    protected $isFinish;
+
+    /**
      * Array of links (and related data) found by the crawler
      * @var array
      */
@@ -79,6 +91,8 @@ class SpiceCrawler
         $this->path = $path;
         $this->links = array();
         $this->blacklist = array();
+        $this->startTime = time();
+        $this->isFinish = false;
     }
 
     /**
@@ -120,6 +134,18 @@ class SpiceCrawler
     protected function traverseSingle($url, $path, $depth)
     {
         try {
+            $currentTime = time();
+            if($currentTime - $this->startTime > (60*60)){
+                if(!$this->isFinish) {
+                    $h = fopen($path . '/../../site_timeout.txt', 'a');
+                    fwrite($h, $path . " timeout \r\n");
+                    fclose($h);
+                }
+                $this->isFinish = true;
+                return;
+            }
+
+            $url = $this->cleanUpURL($url);
             $client = new Client();
             $client->followRedirects();
 
@@ -148,26 +174,43 @@ class SpiceCrawler
             }
             else {
                 if (!$this->useCacheOnly && !filter_var($url, FILTER_VALIDATE_URL) === false) {
-                    $guzzleClient = new \GuzzleHttp\Client(array(
-                        'curl' => array(
-                            CURLOPT_TIMEOUT => 25,
-                            CURLOPT_TIMEOUT_MS => 25000,
-                            CURLOPT_CONNECTTIMEOUT => 0,
-                            CURLOPT_RETURNTRANSFER => true
-                        ),
-                    ));
-                    $client->setClient($guzzleClient);
-                    $h = fopen($path . '/../log.txt', 'a');
-                    fwrite($h, $path . " downloading " . $url . "...");
-                    $crawler = $client->request('GET', $url);
-                    fwrite($h, " done\r\n");
+                    $h = fopen($path . '/../../log.txt', 'a');
+                    fwrite($h, $path . " begin " . $url." => ".microtime(true)."\r\n" );
                     fclose($h);
+                    try {
+                        $content = @file_get_contents($url);
+                    }
+                    catch(\Exception $e){
+                        $h = fopen($path . '/../../log.txt', 'a');
+                        fwrite($h, $path . " error " . $url." => ".$e.message()." ".microtime(true) );
+                        fclose($h);
+                    }
+                    $h = fopen($path . '/../../log.txt', 'a');
+                    fwrite($h, $path . " end " . $url." => ".microtime(true)."\r\n" );
+                    fclose($h);
+                    $crawler->addContent($content, '');
+                    $statusCode = 200;
+                    /*
+                                        $guzzleClient = new \GuzzleHttp\Client(array(
+                                            'curl' => array(
+                                                CURLOPT_TIMEOUT => 25,
+                                                CURLOPT_TIMEOUT_MS => 25000,
+                                                CURLOPT_CONNECTTIMEOUT => 0,
+                                                CURLOPT_RETURNTRANSFER => true
+                                            ),
+                                        ));
+                                        $client->setClient($guzzleClient);
+                                        $h = fopen($path . '/../log.txt', 'a');
+                                        fwrite($h, $path . " downloading " . $url . "...");
+                                        $crawler = $client->request('GET', $url);
+                                        fwrite($h, " done\r\n");
+                                        fclose($h);*/
                     usleep(500000);
-                    $content = $client->getResponse()->getContent();
+                    //      $content = $client->getResponse()->getContent();
                     if ($content) {
                         file_put_contents($curpath . $hashurl, $content);
                     }
-                    $statusCode = $client->getResponse()->getStatus();
+                    //   $statusCode = $client->getResponse()->getStatus();
                 }
                 else{
                     $statusCode=302;
@@ -180,7 +223,7 @@ class SpiceCrawler
             if ($statusCode === 200) {
                 $childLinks = array();
                 if (isset($this->links[$hash]['external_link']) === true && $this->links[$hash]['external_link'] === false) {
-                    $childLinks = $this->extractLinksInfo($crawler, $hash);
+                    $childLinks = $this->extractLinksInfo($crawler, $hash, $path);
                 }
                 $this->links[$hash]['visited'] = true;
                 $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
@@ -250,16 +293,17 @@ class SpiceCrawler
     /**
      * Extract links information from url
      * @param  Crawler $crawler
-     * @param  string  $url
+     * @param  string $url
+     * @param $path
      * @return array
      */
-    protected function extractLinksInfo(Crawler $crawler, $url)
+    protected function extractLinksInfo(Crawler $crawler, $url, $path)
     {
         $childLinks = array();
-        $crawler->filter('a')->each(function (Crawler $node, $i) use (&$childLinks) {
+        $crawler->filter('a')->each(function (Crawler $node, $i) use (&$childLinks, $path) {
             $node_text = trim($node->text());
             $node_url = $node->attr('href');
-            $node_url_is_crawlable = $this->checkIfCrawlable($node_url);
+            $node_url_is_crawlable = $this->checkIfCrawlable($node_url, $path);
             $hash = $this->normalizeLink($node_url);
 
             if (isset($this->links[$hash]) === false) {
@@ -369,28 +413,46 @@ class SpiceCrawler
     /**
      * Is a given URL crawlable?
      * @param  string $uri
+     * @param $path
      * @return bool
      */
-    protected function checkIfCrawlable($uri)
+    protected function checkIfCrawlable($uri, $path)
     {
         if (empty($uri) === true) {
             return false;
         }
-
-        $stop_links = array(
-            '@^javascript\:.*$@i',
-            '@^#.*@',
-            '@iccal@i',
-            //   '@^.*\.pdf@i',
-            '@^.*\.docx@i',
-            '@^.*\.doc@i',
-            '@^.*\.jpg@i',
-            '@^.*\.gif@i',
-            '@^.*\.png@i',
-            '@^.*\.zip@i',
-            '@^.*\.bmp@i',
-            '@^mailto\:.*@i'
-        );
+        $file_bl = $path . '/../../global_blacklist.txt';
+        $stop_links = Array();
+        if(!file_exists($file_bl)){
+            $stop_links = array(
+                '@^javascript\:.*$@i',
+                '@^#.*@',
+                '@iccal@i',
+                '@demarches-en-ligne@i',
+                'droits-demarches-particuliers',
+                '@week.listevents',
+                'month.calendar',
+                'mailto:',
+                //   '@^.*\.pdf@i',
+                '@^.*\.docx@i',
+                '@^.*\.doc@i',
+                '@^.*\.jpg@i',
+                '@^.*\.gif@i',
+                '@^.*\.png@i',
+                '@^.*\.zip@i',
+                '@^.*\.bmp@i',
+                '@^mailto\:.*@i'
+            );
+            file_put_contents($file_bl,implode("\r\n",$stop_links));
+        }
+        else{
+            $stop_links = file($file_bl);
+            foreach($stop_links as $k => $data){
+                if (empty($data) === true) {
+                    unset($stop_links[$k]);
+                }
+            }
+        }
 
         foreach($this->blacklist as $bl){
             $stop_links[]= trim($bl);
@@ -406,6 +468,43 @@ class SpiceCrawler
     }
 
     /**
+     * cleaning up url from session?
+     * @param  string $uri
+     * @param $path
+     * @return string
+     */
+    protected function cleanUpURL($uri, $path)
+    {
+        if (empty($uri) === true) {
+            return '';
+        }
+        $file_cl = $path . '/../../global_cleanup_url.txt';
+        $cleaning_links = Array();
+        if(!file_exists($file_cl)){
+            $cleaning_links = array(
+                '@PHPSESSID=[a-f0-9]+@i' => 'PHPSESSID=el4ukv0kqbvoirg7nkp4dncpk3',
+                '@_tsel=[0-9]+@i' => '_tsel=1400000000'
+
+            );
+            file_put_contents($file_cl,implode("\r\n",$cleaning_links));
+        }
+        else{
+            $cleaning_links = file($file_cl);
+            foreach($cleaning_links as $k => $data){
+                if (empty($data) === true) {
+                    unset($cleaning_links[$k]);
+                }
+            }
+        }
+
+        foreach ($cleaning_links as $pattern => $replace) {
+            $uri = preg_replace($pattern, $replace, $uri);
+        }
+
+        return $uri;
+    }
+
+    /**
      * Is URL external?
      * @param  string $url An absolute URL (with scheme)
      * @return bool
@@ -414,7 +513,7 @@ class SpiceCrawler
     {
         $base_url_trimmed = str_replace(array('http://', 'https://'), '', $this->baseUrl);
 
-        return preg_match("@http(s)?\://$base_url_trimmed@", $url) == false;
+        return preg_match("@^http(s)?\://$base_url_trimmed@", $url) == false;
     }
 
     /**
