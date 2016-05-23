@@ -259,7 +259,6 @@ class SpiceCrawler
         }
 
         foreach ($childLinks as $url => $info) {
-            $url = $this->cleanUpURL($url,$path);
             $hash = $this->getPathFromUrl($url);
 
             if (isset($this->links[$hash]) === false) {
