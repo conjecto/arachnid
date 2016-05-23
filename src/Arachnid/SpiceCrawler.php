@@ -259,11 +259,13 @@ class SpiceCrawler
         }
 
         foreach ($childLinks as $url => $info) {
-
+            $url = $this->cleanUpURL($url,$path);
             $hash = $this->getPathFromUrl($url);
 
             if (isset($this->links[$hash]) === false) {
+                $hashurl = md5($url);
                 $this->links[$hash] = $info;
+                $this->links[$hash]['hash'] = $hashurl;
             } else {
                 $this->links[$hash]['original_urls'] = isset($this->links[$hash]['original_urls']) ? array_merge($this->links[$hash]['original_urls'], $info['original_urls']) : $info['original_urls'];
                 $this->links[$hash]['links_text'] = isset($this->links[$hash]['links_text']) ? array_merge($this->links[$hash]['links_text'], $info['links_text']) : $info['links_text'];
@@ -307,6 +309,8 @@ class SpiceCrawler
             $hash = $this->normalizeLink($node_url);
 
             if (isset($this->links[$hash]) === false) {
+                $hashurl = md5($node_url);
+                $childLinks[$hash]['hash'] = $hashurl;
                 $childLinks[$hash]['original_urls'][$node_url] = $node_url;
                 $childLinks[$hash]['links_text'][$node_text] = $node_text;
 
