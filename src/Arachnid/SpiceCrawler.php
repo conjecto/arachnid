@@ -421,42 +421,30 @@ class SpiceCrawler
         if (empty($uri) === true) {
             return false;
         }
-    /*    $file_bl = $path . '/../../global_blacklist.txt';
-        $stop_links = Array();
-        if(!file_exists($file_bl)){*/
-            $stop_links = array(
-                '@^javascript\:.*$@i',
-                '@^#.*@',
-                '@iccal@i',
-                '@demarches-en-ligne@i',
-                '@demarches_en_ligne@i',
-                '@droits-demarches-particuliers@i',
-                '@module\=Calendrier@i',
-                '@module-Calendrier@i',
-                '@listevents@i',
-                '@icalrepeat@i',
-                '@month.calendar@i',
-                '@mailto\:@i',
-                //   '@^.*\.pdf@i',
-                '@^.*\.docx@i',
-                '@^.*\.doc@i',
-                '@^.*\.jpg@i',
-                '@^.*\.gif@i',
-                '@^.*\.png@i',
-                '@^.*\.zip@i',
-                '@^.*\.bmp@i'
-            );
-         /*   file_put_contents($file_bl,implode("\r\n",$stop_links));
-        }
-        else{
-            $stop_links = file($file_bl);
-            foreach($stop_links as $k => $data){
-                if (empty($data) === true) {
-                    unset($stop_links[$k]);
-                }
-            }
-        }
-*/
+        $stop_links = array(
+            '@^javascript\:.*$@i',
+            '@^#.*@',
+            '@iccal@i',
+            '@demarches-en-ligne@i',
+            '@demarches_en_ligne@i',
+            '@droits-demarches-particuliers@i',
+            '@module\=Calendrier@i',
+            '@module-Calendrier@i',
+            '@listevents@i',
+            '@icalrepeat@i',
+            '@month.calendar@i',
+            '@mailto\:@i',
+            '@spip.php\?page\=login@i',
+            //   '@^.*\.pdf@i',
+            '@^.*\.docx@i',
+            '@^.*\.doc@i',
+            '@^.*\.jpg@i',
+            '@^.*\.gif@i',
+            '@^.*\.png@i',
+            '@^.*\.zip@i',
+            '@^.*\.bmp@i'
+        );
+
         foreach($this->blacklist as $bl){
             $stop_links[]= trim($bl);
         }
