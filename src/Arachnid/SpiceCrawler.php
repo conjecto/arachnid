@@ -431,8 +431,6 @@ class SpiceCrawler
             '@demarches-en-ligne@i',
             '@demarches_en_ligne@i',
             '@droits-demarches-particuliers@i',
-            '@module\=Calendrier@i',
-            '@module-Calendrier@i',
             '@listevents@i',
             '@icalrepeat@i',
             '@month.calendar@i',
@@ -445,7 +443,14 @@ class SpiceCrawler
             '@^.*\.gif@i',
             '@^.*\.png@i',
             '@^.*\.zip@i',
-            '@^.*\.bmp@i'
+            '@^.*\.bmp@i',
+            '@theme\=print@i',
+            '@theme-print@i',
+            '@http\:@i',
+            '@www\.@i',
+            '@calendrier@i',
+            '@jcal@i',
+            '@http%3A@i'
         );
 
         foreach($this->blacklist as $bl){
