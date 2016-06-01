@@ -446,8 +446,8 @@ class SpiceCrawler
             '@^.*\.bmp@i',
             '@theme\=print@i',
             '@theme-print@i',
-            '@http\:@i',
-            '@www\.@i',
+            '@[.+]{8}http\:@i',
+            '@[.+]{8}www\.@i',
             '@calendrier@i',
             '@jcal@i',
             '@http%3A@i'
