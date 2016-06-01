@@ -167,8 +167,16 @@ class SpiceCrawler
             $curpath = $path;
             $crawler = new Crawler(null, $url);
 
-            if(file_exists($curpath.$hashurl)){
-                $data = file_get_contents($curpath.$hashurl);
+            if(file_exists($curpath . $hashurl)) {
+                $opts = array(
+                    'http' => array(
+                        'method' => "GET",
+                        'header' => "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1\r\n"
+                    )
+                );
+
+                $context = stream_context_create($opts);
+                $data = file_get_contents($curpath . $hashurl, false, $context);
                 $crawler->addContent($data, '');
                 $statusCode = 200;
             }
