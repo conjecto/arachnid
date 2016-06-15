@@ -135,7 +135,7 @@ class SpiceCrawler
     {
         try {
             $currentTime = time();
-            if($currentTime - $this->startTime > (60*60)){
+            if($currentTime - $this->startTime > (60*60*3)){
                 if(!$this->isFinish) {
                     $h = fopen($path . '/../../site_timeout.txt', 'a');
                     fwrite($h, $path . " timeout \r\n");
@@ -168,7 +168,7 @@ class SpiceCrawler
             $crawler = new Crawler(null, $url);
 
             if(file_exists($curpath . $hashurl)) {
-                $data = file_get_contents($curpath . $hashurl);
+                $data = gzuncompress(file_get_contents($curpath . $hashurl));
                 $crawler->addContent($data, '');
                 $statusCode = 200;
             }
@@ -218,7 +218,7 @@ class SpiceCrawler
                     usleep(500000);
                     //      $content = $client->getResponse()->getContent();
                     if ($content) {
-                        file_put_contents($curpath . $hashurl, $content);
+                        file_put_contents($curpath . $hashurl, gzcompress($content));
                     }
                     //   $statusCode = $client->getResponse()->getStatus();
                 }
@@ -406,7 +406,7 @@ class SpiceCrawler
     /**
      * Extract title information from url
      * @param Crawler $crawler
-     * @param string                                $url
+     * @param string $url
      */
     protected function extractTitleInfo(Crawler $crawler, $url)
     {
@@ -458,7 +458,7 @@ class SpiceCrawler
             '@theme-print@i',
             '@[.+]{8}http\:@i',
             '@[.+]{8}www\.@i',
-            '@calendrier@i',
+            '@[&|=]+calendrier@i',
             '@jcal@i',
             '@http%3A@i'
         );
