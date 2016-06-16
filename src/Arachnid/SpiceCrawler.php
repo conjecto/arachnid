@@ -490,7 +490,8 @@ class SpiceCrawler
 
         $cleaning_links = array(
             '@PHPSESSID=[a-z0-9]+@i' => 'PHPSESSID=el4ukv0kqbvoirg7nkp4dncpk3',
-            '@_tsel=[0-9]+@i' => '_tsel=1400000000'
+            '@_tsel=[0-9]+@i' => '_tsel=1400000000',
+            '@jsessionid=[A-F0-9]+@i' => 'jsessionid=A8CBE2E09A094CD2C136C100BA8F00D0'
         );
 
         foreach ($cleaning_links as $pattern => $replace) {
