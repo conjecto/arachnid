@@ -188,7 +188,7 @@ class SpiceCrawler
                         );
 
                         $context = stream_context_create($opts);
-                        $content = @file_get_contents($url, false, $context);
+                        $content = @file_get_contents($url, false, $context,-1,1024*1024*100);
                     }
                     catch(\Exception $e){
                         $h = fopen($path . '/../../log.txt', 'a');
