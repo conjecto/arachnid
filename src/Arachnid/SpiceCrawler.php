@@ -434,6 +434,11 @@ class SpiceCrawler
         if (empty($uri) === true) {
             return false;
         }
+
+        if(strlen($uri) > 2000){
+            return false;
+        }
+
         $stop_links = array(
             '@^javascript\:.*$@i',
             '@^#.*@',
