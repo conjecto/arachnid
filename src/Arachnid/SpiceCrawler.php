@@ -443,6 +443,8 @@ class SpiceCrawler
             '@^javascript\:.*$@i',
             '@^#.*@',
             '@iccal@i',
+            '@cal_day@i',
+            '@webcal@i',
             '@demarches-en-ligne@i',
             '@demarches_en_ligne@i',
             '@droits-demarches-particuliers@i',
