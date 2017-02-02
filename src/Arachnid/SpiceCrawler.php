@@ -182,7 +182,11 @@ class SpiceCrawler
             $crawler = new Crawler(null, $url);
 
             if ($useCache && file_exists($curpath . $hashurl)) {
-                $data = gzuncompress(file_get_contents($curpath . $hashurl));
+                $filec = file_get_contents($curpath . $hashurl);
+                if($filec) {
+                    $data = gzuncompress($filec);
+                }
+                else $data = '';
                 $crawler->addContent($data, '');
                 $statusCode = 200;
             } else {
@@ -249,12 +253,12 @@ class SpiceCrawler
                 if (isset($this->links[$hash]['external_link']) === true && $this->links[$hash]['external_link'] === false) {
                     $childLinks = $this->extractLinksInfo($crawler, $hash, $path);
                 }
-                if(!isset($this->links[$hash]['visited'])) {
-                    $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
-                }
+                $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
+
                 $this->links[$hash]['visited'] = true;
             }
         } catch (GuzzleException $e) {
+            $e->
             $h = fopen($path . '/../../log.txt', 'a');
             fwrite($h, $path . " " . $e->getCode() . " " . $e->getMessage() . " " . "\r\n");
             fclose($h);
@@ -310,14 +314,14 @@ class SpiceCrawler
 
             if (empty($url) === false && $this->links[$hash]['visited'] === false && isset($this->links[$hash]['dont_visit']) === false) {
                 if (isset($childLinks[$hash]['external_link']) === false || $childLinks[$hash]['external_link'] === false) {
-                    $hashurl = md5($url);
-                    if (!isset($this->crawledUrl[$hashurl])) {
-                        $this->crawledUrl[$hashurl] = 1;
+                    if (!isset($this->crawledUrl[$hash])) {
+                        $this->crawledUrl[$hash] = 1;
                         $this->traverseSingle($this->normalizeLink($childLinks[$url]['absolute_url']), $path, $depth);
                     }
                 }
 
             }
+            $this->crawledUrl[$hash] = 1;
         }
     }
 
