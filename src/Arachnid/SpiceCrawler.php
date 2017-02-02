@@ -83,7 +83,7 @@ class SpiceCrawler
      * @param int $maxDepth
      * @param bool $useCacheOnly
      */
-    public function __construct($baseUrl,$path, $maxDepth = 3, $useCacheOnly = false)
+    public function __construct($baseUrl, $path, $maxDepth = 3, $useCacheOnly = false)
     {
         $this->baseUrl = $baseUrl;
         $this->maxDepth = $maxDepth;
@@ -113,7 +113,7 @@ class SpiceCrawler
             );
         }
 
-        $this->traverseSingle($url, $this->path, $this->maxDepth);
+        $this->traverseSingle($url, $this->path, $this->maxDepth, false);
     }
 
     /**
@@ -129,14 +129,15 @@ class SpiceCrawler
      * Crawl single URL
      * @param string $url
      * @param string $path
-     * @param int    $depth
+     * @param int $depth
+     * @param bool $useCache
      */
-    protected function traverseSingle($url, $path, $depth)
+    protected function traverseSingle($url, $path, $depth, $useCache = true)
     {
         try {
             $currentTime = time();
-            if($currentTime - $this->startTime > (60*60*3)){
-                if(!$this->isFinish) {
+            if ($currentTime - $this->startTime > (60 * 60 * 3)) {
+                if (!$this->isFinish) {
                     $h = fopen($path . '/../../site_timeout.txt', 'a');
                     fwrite($h, $path . " timeout \r\n");
                     fclose($h);
@@ -145,38 +146,37 @@ class SpiceCrawler
                 return;
             }
 
-            $url = $this->cleanUpURL($url,$path);
+            $url = $this->cleanUpURL($url, $path);
             $client = new Client();
             $client->followRedirects();
 
-            if(!file_exists($path)){
-                mkdir($path,0777);
+            if (!file_exists($path)) {
+                mkdir($path, 0777);
                 // create blacklist file
-                $h = fopen($path.'_blacklist','w');
+                $h = fopen($path . '_blacklist', 'w');
                 fclose($h);
-            }
-            else{
-                if(!file_exists($path . '_blacklist')) {
+            } else {
+                if (!file_exists($path . '_blacklist')) {
                     $h = fopen($path . '_blacklist', 'w');
                     fclose($h);
                 }
-                $this->blacklist = file($path.'_blacklist');
+                $this->blacklist = file($path . '_blacklist');
             }
 
             $hashurl = md5($url);
             $curpath = $path;
             $crawler = new Crawler(null, $url);
 
-            if(file_exists($curpath . $hashurl)) {
+            if ($useCache && file_exists($curpath . $hashurl)) {
                 $data = gzuncompress(file_get_contents($curpath . $hashurl));
                 $crawler->addContent($data, '');
                 $statusCode = 200;
-            }
-            else {
+            } else {
                 if (!$this->useCacheOnly && !filter_var($url, FILTER_VALIDATE_URL) === false) {
                     $h = fopen($path . '/../../log.txt', 'a');
-                    fwrite($h, $path . " begin " . $url." => ".microtime(true)."\r\n" );
+                    fwrite($h, $path . " begin " . $url . " => " . microtime(true) . "\r\n");
                     fclose($h);
+                    $content='';
                     try {
                         $opts = array(
                             'http' => array(
@@ -188,15 +188,14 @@ class SpiceCrawler
                         );
 
                         $context = stream_context_create($opts);
-                        $content = @file_get_contents($url, false, $context,-1,1024*1024*100);
-                    }
-                    catch(\Exception $e){
+                        $content = @file_get_contents($url, false, $context);
+                    } catch (\Exception $e) {
                         $h = fopen($path . '/../../log.txt', 'a');
-                        fwrite($h, $path . " error " . $url." => ".$e.message()." ".microtime(true) );
+                        fwrite($h, $path . " error " . $url . " => " . $e->getMessage() . " " . microtime(true));
                         fclose($h);
                     }
                     $h = fopen($path . '/../../log.txt', 'a');
-                    fwrite($h, $path . " end " . $url." => ".microtime(true)."\r\n" );
+                    fwrite($h, $path . " end " . $url . " => " . microtime(true) . "\r\n");
                     fclose($h);
                     $crawler->addContent($content, '');
                     $statusCode = 200;
@@ -221,9 +220,8 @@ class SpiceCrawler
                         file_put_contents($curpath . $hashurl, gzcompress($content));
                     }
                     //   $statusCode = $client->getResponse()->getStatus();
-                }
-                else{
-                    $statusCode=302;
+                } else {
+                    $statusCode = 302;
                 }
             }
             $hash = $this->getPathFromUrl($url);
@@ -238,16 +236,16 @@ class SpiceCrawler
                 $this->links[$hash]['visited'] = true;
                 $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
             }
-        } catch (GuzzleException $e) {
-            $h = fopen($path.'/../../log.txt','a');
-            fwrite($h,$path." ".$e->getcode()." ". $e->getMessage()." "."\r\n");
+        } catch (GuzzleException $e) {$e->
+        $h = fopen($path . '/../../log.txt', 'a');
+            fwrite($h, $path . " " . $e->getCode() . " " . $e->getMessage() . " " . "\r\n");
             fclose($h);
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
             $this->links[$url]['error_message'] = $e->getMessage();
         } catch (\Exception $e) {
-            $h = fopen($path.'/../../log.txt','a');
-            fwrite($h,$path." ".$e->getcode()." ". $e->getMessage()." ".$e->getFile()." - line ".$e->getLine()."\r\n");
+            $h = fopen($path . '/../../log.txt', 'a');
+            fwrite($h, $path . " " . $e->getCode() . " " . $e->getMessage() . " " . $e->getFile() . " - line " . $e->getLine() . "\r\n");
             fclose($h);
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
@@ -293,7 +291,7 @@ class SpiceCrawler
             }
 
             if (empty($url) === false && $this->links[$hash]['visited'] === false && isset($this->links[$hash]['dont_visit']) === false) {
-                if(isset($childLinks[$hash]['external_link']) === false || $childLinks[$hash]['external_link']===false){
+                if (isset($childLinks[$hash]['external_link']) === false || $childLinks[$hash]['external_link'] === false) {
                     $this->traverseSingle($this->normalizeLink($childLinks[$url]['absolute_url']), $path, $depth);
                 }
 
@@ -338,7 +336,6 @@ class SpiceCrawler
                     }
 
 
-
                     // Is this an external URL?
                     $childLinks[$hash]['external_link'] = $this->checkIfExternal($childLinks[$hash]['absolute_url']);
 
@@ -367,13 +364,13 @@ class SpiceCrawler
      */
     public function PopulateLinks($links, $config)
     {
-        foreach($links as $k => $link) {
+        foreach ($links as $k => $link) {
             if (isset($link['links_text'])) {
                 foreach ($link['links_text'] as $link_text) {
                     $text = strtolower($link_text);
 
-                    foreach($config as $conf) {
-                        if(!isset($links[$k]['documents'][$conf['type']])){
+                    foreach ($config as $conf) {
+                        if (!isset($links[$k]['documents'][$conf['type']])) {
                             $links[$k]['documents'][$conf['type']]['ranking'] = 0;
                             $links[$k]['documents'][$conf['type']]['name'] = $conf['type'];
                         }
@@ -387,8 +384,8 @@ class SpiceCrawler
             }
             if (isset($link['original_urls'])) {
                 foreach ($links[$k]['original_urls'] as $original_url) {
-                    foreach($config as $conf) {
-                        if(!isset($links[$k]['documents'][$conf['type']])){
+                    foreach ($config as $conf) {
+                        if (!isset($links[$k]['documents'][$conf['type']])) {
                             $links[$k]['documents'][$conf['type']]['ranking'] = 0;
                             $links[$k]['documents'][$conf['type']]['name'] = $conf['type'];
                         }
@@ -403,6 +400,7 @@ class SpiceCrawler
         }
         return $links;
     }
+
     /**
      * Extract title information from url
      * @param Crawler $crawler
@@ -434,17 +432,10 @@ class SpiceCrawler
         if (empty($uri) === true) {
             return false;
         }
-
-        if(strlen($uri) > 2000){
-            return false;
-        }
-
         $stop_links = array(
             '@^javascript\:.*$@i',
             '@^#.*@',
             '@iccal@i',
-            '@cal_day@i',
-            '@webcal@i',
             '@demarches-en-ligne@i',
             '@demarches_en_ligne@i',
             '@droits-demarches-particuliers@i',
@@ -470,8 +461,8 @@ class SpiceCrawler
             '@http%3A@i'
         );
 
-        foreach($this->blacklist as $bl){
-            $stop_links[]= trim($bl);
+        foreach ($this->blacklist as $bl) {
+            $stop_links[] = trim($bl);
         }
 
         foreach ($stop_links as $ptrn) {
@@ -539,14 +530,14 @@ class SpiceCrawler
     protected function getPathFromUrl($url)
     {
         if (strpos($url, $this->baseUrl) === 0 && $url !== $this->baseUrl) {
-            $url = str_replace($this->baseUrl,'', $url);
+            $url = str_replace($this->baseUrl, '', $url);
             if (strpos($url, '/') === 0) {
-                $url = substr($url,1);
+                $url = substr($url, 1);
             }
             return $url;
         } else {
             if (strpos($url, '/') === 0) {
-                $url = substr($url,1);
+                $url = substr($url, 1);
             }
             return $url;
         }
