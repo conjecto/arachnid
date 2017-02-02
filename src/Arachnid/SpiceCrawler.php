@@ -77,6 +77,12 @@ class SpiceCrawler
     protected $links;
 
     /**
+     * Array of links already visited
+     * @var array
+     */
+    protected $crawledUrl;
+
+    /**
      * Constructor
      * @param string $baseUrl
      * @param string $path
@@ -93,6 +99,7 @@ class SpiceCrawler
         $this->blacklist = array();
         $this->startTime = time();
         $this->isFinish = false;
+        $this->crawledUrl = array();
     }
 
     /**
@@ -112,8 +119,28 @@ class SpiceCrawler
                 'original_urls' => array($url)
             );
         }
-
+        $this->setBlackList();
         $this->traverseSingle($url, $this->path, $this->maxDepth, false);
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public function setBlackList()
+    {
+        if (!file_exists($this->path)) {
+            mkdir($this->path, 0777);
+            // create blacklist file
+            $h = fopen($this->path . '_blacklist', 'w');
+            fclose($h);
+        } else {
+            if (!file_exists($this->path . '_blacklist')) {
+                $h = fopen($this->path . '_blacklist', 'w');
+                fclose($h);
+            }
+            $this->blacklist = file($this->path . '_blacklist');
+        }
     }
 
     /**
@@ -150,19 +177,6 @@ class SpiceCrawler
             $client = new Client();
             $client->followRedirects();
 
-            if (!file_exists($path)) {
-                mkdir($path, 0777);
-                // create blacklist file
-                $h = fopen($path . '_blacklist', 'w');
-                fclose($h);
-            } else {
-                if (!file_exists($path . '_blacklist')) {
-                    $h = fopen($path . '_blacklist', 'w');
-                    fclose($h);
-                }
-                $this->blacklist = file($path . '_blacklist');
-            }
-
             $hashurl = md5($url);
             $curpath = $path;
             $crawler = new Crawler(null, $url);
@@ -176,11 +190,12 @@ class SpiceCrawler
                     $h = fopen($path . '/../../log.txt', 'a');
                     fwrite($h, $path . " begin " . $url . " => " . microtime(true) . "\r\n");
                     fclose($h);
-                    $content='';
+                    $content = '';
                     try {
                         $opts = array(
                             'http' => array(
                                 'method' => "GET",
+                                'timeout' => 20,
                                 'header' => "Accept-language: fr\r\n" .
                                     "Cookie: foo=bar\r\n" .
                                     "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1\r\n"
@@ -215,9 +230,10 @@ class SpiceCrawler
                                         fwrite($h, " done\r\n");
                                         fclose($h);*/
                     usleep(500000);
-                    //      $content = $client->getResponse()->getContent();
                     if ($content) {
                         file_put_contents($curpath . $hashurl, gzcompress($content));
+                    } else {
+                        file_put_contents($curpath . $hashurl, "");
                     }
                     //   $statusCode = $client->getResponse()->getStatus();
                 } else {
@@ -233,11 +249,13 @@ class SpiceCrawler
                 if (isset($this->links[$hash]['external_link']) === true && $this->links[$hash]['external_link'] === false) {
                     $childLinks = $this->extractLinksInfo($crawler, $hash, $path);
                 }
+                if(!isset($this->links[$hash]['visited'])) {
+                    $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
+                }
                 $this->links[$hash]['visited'] = true;
-                $this->traverseChildren($childLinks, $hash, $path, $depth - 1);
             }
-        } catch (GuzzleException $e) {$e->
-        $h = fopen($path . '/../../log.txt', 'a');
+        } catch (GuzzleException $e) {
+            $h = fopen($path . '/../../log.txt', 'a');
             fwrite($h, $path . " " . $e->getCode() . " " . $e->getMessage() . " " . "\r\n");
             fclose($h);
             $this->links[$url]['status_code'] = '404';
@@ -292,7 +310,11 @@ class SpiceCrawler
 
             if (empty($url) === false && $this->links[$hash]['visited'] === false && isset($this->links[$hash]['dont_visit']) === false) {
                 if (isset($childLinks[$hash]['external_link']) === false || $childLinks[$hash]['external_link'] === false) {
-                    $this->traverseSingle($this->normalizeLink($childLinks[$url]['absolute_url']), $path, $depth);
+                    $hashurl = md5($url);
+                    if (!isset($this->crawledUrl[$hashurl])) {
+                        $this->crawledUrl[$hashurl] = 1;
+                        $this->traverseSingle($this->normalizeLink($childLinks[$url]['absolute_url']), $path, $depth);
+                    }
                 }
 
             }
