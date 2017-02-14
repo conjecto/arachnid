@@ -533,8 +533,10 @@ class SpiceCrawler
     protected function checkIfExternal($url)
     {
         $base_url_trimmed = str_replace(array('http://', 'https://'), '', $this->baseUrl);
-
-        return preg_match("@^http(s)?\://$base_url_trimmed@", $url) == false;
+        $base_url_trimmed = str_replace("@", '', $base_url_trimmed);
+        $tt = preg_match("@^http(s)?\://$base_url_trimmed@", $url);
+        if ($tt === false) echo $base_url_trimmed . " ";
+        return $tt == false;
     }
 
     /**
